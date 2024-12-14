@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  airflow:
+    image: apache/airflow:2.7.0
+    container_name: airflow2
+    environment:
+      - AIRFLOW_CORE_EXECUTOR=LocalExecutor
+      - AIRFLOW_CORE_DAGS_FOLDER=/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: >
+      bash -c "airflow db init &&
+               airflow users create --username admin --password admin --firstname Air --lastname Flow --role Admin --email admin@example.com &&
+               airflow webserver & airflow scheduler"
+    networks:
+      - kafka-net
+
+  fastapi_kafka:
+    build:
+      context: ./fastapi_kafka
+    container_name: fastapi2
+    ports:
+      - "8000:8000"
+    networks:
+      - kafka-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8083
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka:9092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CONFLUENT_METRICS_ENABLE: 'false'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      KAFKA_MAX_REQUEST_SIZE: 20000000  # 10 MB
+      KAFKA_MAX_MESSAGE_BYTES: 20000000  # 10 MB
+
+    networks:
+      - kafka-net
+    healthcheck:
+      test: ["CMD", "bash", "-c", 'nc -z kafka 9092']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper2
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka-net
+
+  neo4j:
+    image: neo4j:5
+    container_name: neo4j2
+    environment:
+      - NEO4J_AUTH=none
+    ports:
+      - "7474:7474"  # Neo4j Browser
+      - "7687:7687"  # Bolt Protocol
+    
+    networks:
+      - kafka-net
+
+  streamlit:
+    build:
+      context: ./streamlit
+    ports:
+      - "8501:8501"
+    networks:
+      - kafka-net
+
+  # Spark Master
+  spark-master:
+    image: bitnami/spark:latest
+    container_name: spark-master2
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "4040:4040"  # Spark UI
+      - "7077:7077"  # Spark Master
+    networks:
+      - kafka-net
+    volumes:
+      - ./spark:/app/spark
+
+  # Spark Worker
+  spark-worker:
+    image: bitnami/spark:latest
+    container_name: spark-worker2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"  # Spark Worker UI
+    networks:
+      - kafka-net
+    volumes:
+      - ./spark:/app/spark
+
+networks:
+  kafka-net:
+    driver: bridge
