@@ -1,41 +1,83 @@
-# **Projet Data Engineering : Traitement de graphe**
+# Data Engineering Project: Graph Processing
 
-## **Description**
-Ce projet implémente un pipeline de data engineering pour traiter un dataset de graphe. Il utilise les technologies suivantes :
-- **Apache Kafka** : Pour la diffusion et la consommation des données.
-- **Apache Spark GraphX** : Pour le traitement et l'analyse des graphes.
-- **Neo4j** : Pour le stockage des résultats du traitement.
-- **Streamlit** : Pour visualiser les résultats de manière interactive.
-- **Apache Airflow** : Pour orchestrer l'ensemble du pipeline.
+## Description
+This project implements a data engineering pipeline for processing a graph dataset using cutting-edge technologies like FastAPI, Apache Kafka, Apache Spark GraphX, Neo4j, Streamlit, and Apache Airflow. The goal is to enable automated graph data processing and analysis with interactive visualizations.
 
-## **Architecture**
-1. **Docker** :
-   - L'ensemble des services nécessaires (Kafka, Spark, Neo4j, Airflow) est conteneurisé avec Docker Compose pour simplifier le déploiement.
-   - Chaque service s'exécute dans son propre conteneur, assurant l'isolation et la portabilité.
-     
-2. **Kafka** :
-   - Un producteur diffuse les données depuis un fichier Parquet dans un topic Kafka.
-   - Un consommateur Kafka consomme ces données.
+---
 
-3. **Spark GraphX** :
-   - Les données sont récupérées depuis Kafka et traitées dans Spark GraphX.
-   - Les algorithmes de traitement sont : PageRank, Connected Components, Triangle Counting.
+## Technologies Used
+- **FastAPI**: Provides an API to stream data from a Parquet file into Kafka.
+- **Apache Kafka**: For streaming and consuming data.
+- **Apache Spark GraphX**: For graph computation and analysis.
+- **Neo4j**: To store and query graph results.
+- **Streamlit**: To visualize data interactively.
+- **Apache Airflow**: To orchestrate and schedule the pipeline tasks.
+- **Docker & Docker Compose**: For containerization and simplified deployment.
 
-4. **Neo4j** :
-   - Les résultats des traitements sont stockés dans Neo4j via des requêtes Cypher.
+---
 
-5. **Streamlit** :
-   - Une interface interactive permet de visualiser les résultats depuis Neo4j.
+## Architecture
+### Workflow Steps:
+1. **Docker**:  
+   - All services are containerized using Docker Compose.
+   - Independent containers ensure service isolation and easy portability.
+   
+2. **Kafka**:  
+   - Data is streamed into Kafka using a FastAPI service.
+   - The FastAPI endpoint reads data from a Parquet file and streams it into a Kafka topic.
+   - A Kafka consumer retrieves the data for further processing.
 
-6. **Airflow** :
-   - Orchestration complète du pipeline pour une exécution automatisée.
+3. **Spark GraphX**:  
+   - Processes graph data retrieved from Kafka.
+   - Executes algorithms such as:
+     - PageRank
+     - Connected Components
+     - Triangle Counting.
+
+4. **Neo4j**:  
+   - Processed data is stored in Neo4j using Cypher queries for further analysis.
+
+5. **Streamlit**:  
+   - Displays an interactive dashboard for visualizing results from Neo4j.
+
+6. **Airflow**:  
+   - Manages and orchestrates the pipeline for automated task execution.
   
 ![workflow](https://github.com/user-attachments/assets/1b8ad346-f873-4b2f-b009-73ae2ab80823)
 
-## **Prérequis**
-- Docker et Docker Compose
-- Python 3.8+
-- Bibliothèques Python :
-  - `pandas`, `kafka-python`, `pyspark`
+---
 
+## Prerequisites
+Before running the project, ensure you have:
+- **Docker** and **Docker Compose** installed.
+- **Python 3.8+** installed on your system.
+- Required Python libraries:
+  ```bash
+  pip install pandas kafka-python pyspark fastapi uvicorn
 
+---
+
+## How to run
+ - Clone the repository:
+    ```bash
+    git clone https://github.com/nada-han/Graph-Pipeline-Project.git
+    cd Graph-Pipeline-Project
+
+ - Start the services:
+    ```bash
+    docker-compose up --build
+
+ - Access the tools:
+   
+   **Airflow UI:** Access at http://localhost:8080 to monitor and trigger pipeline workflows.
+   
+   **Kafka API:** Verify data streaming by accessing FastAPI at http://localhost:8000/graph.
+   
+   **Neo4j Dashboard:** Access Neo4j at http://localhost:7474 to explore stored graph data.
+   
+   **Streamlit Dashboard:** View results interactively at http://localhost:8501.
+
+--- 
+
+## Video tutorial
+For a step-by-step walkthrough of the project setup and usage, watch the tutorial video here:
