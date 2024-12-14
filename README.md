@@ -82,4 +82,4 @@ Before running the project, ensure you have:
 ## Video tutorial
 For a step-by-step walkthrough of the project setup and usage, watch the tutorial video here:
 
-https://github.com/user-attachments/assets/d6f69757-1b88-4b6d-9d0b-c7abfba4f3e9
+https://github.com/user-attachments/assets/553dd5de-10bd-4baa-a4ae-27094a6a88b4
